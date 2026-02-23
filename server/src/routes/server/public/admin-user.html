@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户详情 - X Backup 管理后台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f8fa;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-right span {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .container {
+      padding: 24px;
+    }
+
+    .breadcrumb {
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .breadcrumb a {
+      color: #1da1f2;
+      text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .user-header {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .user-header h2 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 16px;
+    }
+
+    .user-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .info-item .label {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .info-item .value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h3 {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .account-card {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid #eee;
+    }
+
+    .account-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .account-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .account-main {
+      flex: 1;
+    }
+
+    .account-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .account-username {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .account-username a {
+      color: #1da1f2;
+      text-decoration: none;
+    }
+
+    .account-username a:hover {
+      text-decoration: underline;
+    }
+
+    .account-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-green {
+      background: #e6f9ed;
+      color: #17bf63;
+    }
+
+    .badge-gray {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .account-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-item .stat-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .stat-item .stat-value {
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    .stat-item .stat-value.highlight {
+      color: #1da1f2;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1da1f2;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .btn-danger {
+      background: #e0245e;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #c11e52;
+    }
+
+    .btn-primary {
+      background: #1da1f2;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #0d8bd9;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      padding: 24px;
+    }
+
+    .modal-content h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: #1da1f2;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .modal-buttons .btn {
+      padding: 10px 20px;
+    }
+
+    /* 查看备份链接样式 */
+    .view-backup-link {
+      color: #1da1f2;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .view-backup-link:hover {
+      text-decoration: underline;
+    }
+
+    .task-card {
+      background: #f9f9f9;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+      border: 1px solid #eee;
+    }
+
+    .task-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .task-accounts {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .task-accounts .arrow {
+      color: #1da1f2;
+      margin: 0 8px;
+    }
+
+    .task-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .task-status.pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .task-status.running {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .task-status.paused {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
+    .task-status.completed {
+      background: #cce5ff;
+      color: #004085;
+    }
+
+    .task-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .task-progress {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .task-progress-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .task-progress-item .count {
+      color: #1da1f2;
+      font-weight: 500;
+    }
+
+    .card + .card {
+      margin-top: 24px;
+    }
+
+    /* 标签页样式 */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #eee;
+      margin-bottom: 0;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 14px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+      color: #1da1f2;
+    }
+
+    .tab-btn.active {
+      color: #1da1f2;
+      border-bottom-color: #1da1f2;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>X Backup 管理后台</h1>
+    <div class="header-right">
+      <span>管理员</span>
+      <a href="/admin" class="btn btn-light">返回列表</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <a href="/admin" class="back-link">← 返回用户列表</a>
+
+    <div id="content">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div id="password-modal" class="modal">
+    <div class="modal-content">
+      <h3>修改密码</h3>
+      <input type="password" id="new-password" placeholder="请输入新密码">
+      <div class="modal-buttons">
+        <button class="btn" onclick="closePasswordModal()">取消</button>
+        <button class="btn btn-primary" onclick="submitPassword()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content">
+      <h3>确认删除</h3>
+      <p style="margin-bottom: 20px; color: #666;">确定要删除该用户吗？此操作将同时删除该用户的所有X账号和备份数据，且不可恢复。</p>
+      <div class="modal-buttons">
+        <button class="btn" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">确定删除</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api/admin';
+    let authToken = localStorage.getItem('adminAuth');
+
+    // 检查登录
+    if (!authToken) {
+      window.location.href = '/admin';
+    }
+
+    // 获取用户ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id');
+
+    if (!userId) {
+      window.location.href = '/admin';
+    }
+
+    // API请求
+    async function api(path, options = {}) {
+      const res = await fetch(API_BASE + path, {
+        headers: {
+          'Authorization': 'Basic ' + authToken,
+          'Content-Type': 'application/json'
+        },
+        ...options
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('adminAuth');
+        window.location.href = '/admin';
+        return;
+      }
+      return res.json();
+    }
+
+    // 加载用户详情
+    async function loadUserDetail() {
+      try {
+        const res = await api('/users/' + userId);
+        if (res.success) {
+          renderUserDetail(res.user, res.accounts, res.tasks || []);
+        } else {
+          document.getElementById('content').innerHTML = `
+            <div class="empty">
+              <div class="empty-icon">😕</div>
+              <div>加载失败：${res.error}</div>
+            </div>
+          `;
+        }
+      } catch (e) {
+        document.getElementById('content').innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">😕</div>
+            <div>加载失败，请检查网络连接</div>
+          </div>
+        `;
+      }
+    }
+
+    // 渲染用户详情
+    function renderUserDetail(user, accounts, tasks) {
+      document.title = user.username + ' - X Backup 管理后台';
+
+      let html = `
+        <div class="user-header">
+          <h2>${user.username}</h2>
+          <div class="user-info-grid">
+            <div class="info-item">
+              <span class="label">用户ID</span>
+              <span class="value">${user._id.substring(0, 8)}...</span>
+            </div>
+            <div class="info-item">
+              <span class="label">注册时间</span>
+              <span class="value">${formatDate(user.createdAt)}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">X账号数量</span>
+              <span class="value">${accounts.length} 个</span>
+            </div>
+            <div class="info-item">
+              <span class="label">任务数量</span>
+              <span class="value">${tasks.length} 个</span>
+            </div>
+          </div>
+          <div class="user-actions">
+            <button class="btn btn-primary" onclick="showPasswordModal()">修改密码</button>
+            <button class="btn btn-danger" onclick="showDeleteModal()">删除用户</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('accounts')">X账号 (${accounts.length})</button>
+            <button class="tab-btn" onclick="switchTab('tasks')">转移任务 (${tasks.length})</button>
+          </div>
+          <div class="card-body">
+            <!-- 账号列表 -->
+            <div id="accounts-tab" class="tab-content active">
+      `;
+
+      if (accounts.length === 0) {
+        html += `
+          <div class="empty">
+            <div class="empty-icon">📭</div>
+            <div>该用户暂未添加任何X账号</div>
+          </div>
+        `;
+      } else {
+        accounts.forEach(acc => {
+          html += `
+            <div class="account-card">
+              <div class="account-header">
+                <div class="account-main">
+                  <div class="account-name">${acc.xName || acc.xUsername || '未知'}</div>
+                  <div class="account-username">
+                    @${acc.xUsername || '未知'} ·
+                    <a href="https://x.com/${acc.xUsername}" target="_blank">查看主页</a>
+                  </div>
+                </div>
+                <div class="account-badges">
+                  ${acc.hasFollowingBackup ? '<span class="badge badge-green">已备份关注</span>' : '<span class="badge badge-gray">未备份关注</span>'}
+                  ${acc.hasLikesBackup ? '<span class="badge badge-green">已备份点赞</span>' : '<span class="badge badge-gray">未备份点赞</span>'}
+                </div>
+              </div>
+              <div class="account-stats">
+                <div class="stat-item">
+                  <span class="stat-label">X用户ID</span>
+                  <span class="stat-value">${acc.xUserId}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">关注数量</span>
+                  <span class="stat-value highlight">${acc.followingCount}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">点赞数量</span>
+                  <span class="stat-value highlight">${acc.likesCount}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">最后同步</span>
+                  <span class="stat-value">${acc.lastSyncAt ? formatDate(acc.lastSyncAt) : '从未同步'}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">添加时间</span>
+                  <span class="stat-value">${formatDate(acc.createdAt)}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label"></span>
+                  <span class="stat-value">
+                    ${acc.hasFollowingBackup || acc.hasLikesBackup
+                      ? `<a href="/admin-backup.html?id=${acc._id}&name=${encodeURIComponent(acc.xName || acc.xUsername)}" class="view-backup-link">查看备份</a>`
+                      : '<span style="color:#999">查看备份</span>'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `
+            </div>
+            <!-- 任务列表 -->
+            <div id="tasks-tab" class="tab-content">
+      `;
+
+      if (tasks.length === 0) {
+        html += `
+          <div class="empty">
+            <div class="empty-icon">📋</div>
+            <div>该用户暂未创建任何任务</div>
+          </div>
+        `;
+      } else {
+        tasks.forEach(task => {
+          const statusMap = {
+            'pending': '等待中',
+            'running': '运行中',
+            'paused': '已暂停',
+            'completed': '已完成',
+            'error': '出错'
+          };
+          const sourceName = task.sourceAccount ? (task.sourceAccount.xName || task.sourceAccount.xUsername) : '已删除';
+          const targetName = task.targetAccount ? (task.targetAccount.xName || task.targetAccount.xUsername) : '已删除';
+
+          // 计算预估时间
+          const estimateTime = calculateEstimateTime(task);
+
+          // 获取限流配置
+          const config = task.rateLimitConfig || {};
+          const followLimit = `${config.followsPerHour || 5}/h, ${config.followsPerDay || 20}/d`;
+          const likeLimit = `${config.likesPerHour || 10}/h, ${config.likesPerDay || 30}/d`;
+
+          html += `
+            <div class="task-card">
+              <div class="task-header">
+                <div class="task-accounts">
+                  <span>${sourceName}</span>
+                  <span class="arrow">→</span>
+                  <span>${targetName}</span>
+                </div>
+                <span class="task-status ${task.status}">${statusMap[task.status] || task.status}</span>
+              </div>
+              <div class="task-progress">
+                <div class="task-progress-item">
+                  关注: <span class="count">${task.completedFollows}/${task.completedFollows + task.pendingFollows}</span>
+                </div>
+                <div class="task-progress-item">
+                  点赞: <span class="count">${task.completedLikes}/${task.completedLikes + task.pendingLikes}</span>
+                </div>
+                <div class="task-progress-item">
+                  ${formatDate(task.createdAt)}
+                </div>
+              </div>
+              <div class="task-progress" style="margin-top: 8px;">
+                <div class="task-progress-item">
+                  限制: 关注 ${followLimit} | 点赞 ${likeLimit}
+                </div>
+              </div>
+              <div class="task-progress" style="margin-top: 4px; color: #1da1f2;">
+                <div class="task-progress-item">
+                  ${estimateTime}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      html += `
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    // 计算预估完成时间
+    function calculateEstimateTime(task) {
+      const pendingFollows = task.pendingFollows || 0;
+      const pendingLikes = task.pendingLikes || 0;
+
+      if (pendingFollows === 0 && pendingLikes === 0) {
+        return '已完成全部任务';
+      }
+
+      const config = task.rateLimitConfig || {};
+      const followsPerDay = Math.min((config.followsPerHour || 5) * 24, config.followsPerDay || 20);
+      const likesPerDay = Math.min((config.likesPerHour || 10) * 24, config.likesPerDay || 30);
+
+      // 计算需要的天数
+      const followDays = followsPerDay > 0 ? Math.ceil(pendingFollows / followsPerDay) : 0;
+      const likeDays = likesPerDay > 0 ? Math.ceil(pendingLikes / likesPerDay) : 0;
+      const totalDays = Math.max(followDays, likeDays);
+
+      if (totalDays === 0) {
+        return '预计今天内完成';
+      } else if (totalDays === 1) {
+        return '预计需要 1 天完成';
+      } else {
+        return `预计需要 ${totalDays} 天完成`;
+      }
+    }
+
+    // 切换标签页
+    function switchTab(tabName) {
+      // 切换按钮状态
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      // 切换内容显示
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(tabName + '-tab').classList.add('active');
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 初始化
+    loadUserDetail();
+
+    // 显示修改密码弹窗
+    function showPasswordModal() {
+      document.getElementById('password-modal').classList.add('show');
+      document.getElementById('new-password').value = '';
+      document.getElementById('new-password').focus();
+    }
+
+    // 关闭修改密码弹窗
+    function closePasswordModal() {
+      document.getElementById('password-modal').classList.remove('show');
+    }
+
+    // 提交密码修改
+    async function submitPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword || newPassword.length < 3) {
+        alert('密码长度至少3位');
+        return;
+      }
+
+      try {
+        const res = await api('/users/' + userId + '/password', {
+          method: 'PUT',
+          body: JSON.stringify({ newPassword })
+        });
+
+        if (res.success) {
+          alert('密码修改成功');
+          closePasswordModal();
+        } else {
+          alert('修改失败：' + res.error);
+        }
+      } catch (e) {
+        alert('修改失败，请检查网络连接');
+      }
+    }
+
+    // 显示删除确认弹窗
+    function showDeleteModal() {
+      document.getElementById('delete-modal').classList.add('show');
+    }
+
+    // 关闭删除确认弹窗
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('show');
+    }
+
+    // 确认删除
+    async function confirmDelete() {
+      try {
+        const res = await api('/users/' + userId, {
+          method: 'DELETE'
+        });
+
+        if (res.success) {
+          alert('用户已删除');
+          window.location.href = '/admin';
+        } else {
+          alert('删除失败：' + res.error);
+        }
+      } catch (e) {
+        alert('删除失败，请检查网络连接');
+      }
+    }
+
+    // 回车提交密码
+    document.getElementById('new-password').addEventListener('keypress', e => {
+      if (e.key === 'Enter') submitPassword();
+    });
+
+    // 点击弹窗外部关闭
+    document.getElementById('password-modal').addEventListener('click', e => {
+      if (e.target.id === 'password-modal') closePasswordModal();
+    });
+    document.getElementById('delete-modal').addEventListener('click', e => {
+      if (e.target.id === 'delete-modal') closeDeleteModal();
+    });
+  </script>
+</body>
+</html>

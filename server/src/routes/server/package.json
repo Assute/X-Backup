@@ -1,0 +1,19 @@
+{
+  "name": "x-backup-server",
+  "version": "1.0.0",
+  "description": "X账号关注/点赞备份与转移服务",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "sql.js": "^1.10.2",
+    "uuid": "^9.0.0"
+  }
+}

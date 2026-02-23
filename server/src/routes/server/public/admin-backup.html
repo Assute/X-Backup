@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>备份详情 - X Backup 管理后台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f8fa;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-right span {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .container {
+      padding: 24px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1da1f2;
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .page-title {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #eee;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 16px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab:hover {
+      background: #f9f9f9;
+    }
+
+    .tab.active {
+      color: #1da1f2;
+      border-bottom-color: #1da1f2;
+      font-weight: 500;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .search-box {
+      margin-bottom: 16px;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #1da1f2;
+    }
+
+    .count {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+    }
+
+    .list {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee;
+      transition: background 0.2s;
+    }
+
+    .list-item:hover {
+      background: #f9f9f9;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-info {
+      flex: 1;
+    }
+
+    .item-name {
+      font-weight: 500;
+      color: #333;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .item-username {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .item-link {
+      color: #1da1f2;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .item-link:hover {
+      background: #e8f4fd;
+      text-decoration: none;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>X Backup 管理后台</h1>
+    <div class="header-right">
+      <span>管理员</span>
+      <a href="/admin" class="btn btn-light">返回首页</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <a href="javascript:history.back()" class="back-link">← 返回</a>
+
+    <h2 class="page-title" id="page-title">备份详情</h2>
+
+    <div class="card">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('following')">关注列表</button>
+        <button class="tab" onclick="switchTab('likes')">点赞列表</button>
+      </div>
+      <div class="card-body">
+        <div class="search-box">
+          <input type="text" id="search" placeholder="搜索用户名或名称..." oninput="filterList()">
+        </div>
+        <div class="count" id="count"></div>
+        <div class="list" id="list">
+          <div class="loading">加载中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api/admin';
+    let authToken = localStorage.getItem('adminAuth');
+
+    // 检查登录
+    if (!authToken) {
+      window.location.href = '/admin';
+    }
+
+    // 获取参数
+    const urlParams = new URLSearchParams(window.location.search);
+    const accountId = urlParams.get('id');
+    const accountName = urlParams.get('name') || '未知';
+
+    if (!accountId) {
+      window.location.href = '/admin';
+    }
+
+    // 设置标题
+    document.getElementById('page-title').textContent = decodeURIComponent(accountName) + ' 的备份';
+    document.title = decodeURIComponent(accountName) + ' 的备份 - X Backup 管理后台';
+
+    // 数据
+    let backupData = { following: [], likes: [] };
+    let currentTab = 'following';
+
+    // API请求
+    async function api(path) {
+      const res = await fetch(API_BASE + path, {
+        headers: {
+          'Authorization': 'Basic ' + authToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('adminAuth');
+        window.location.href = '/admin';
+        return;
+      }
+      return res.json();
+    }
+
+    // 加载备份数据
+    async function loadBackup() {
+      try {
+        const res = await api('/accounts/' + accountId + '/backup');
+        if (res.success) {
+          backupData = {
+            following: res.following || [],
+            likes: res.likes || []
+          };
+          updateTabCounts();
+          renderList();
+        } else {
+          document.getElementById('list').innerHTML = `
+            <div class="empty">
+              <div class="empty-icon">😕</div>
+              <div>加载失败：${res.error}</div>
+            </div>
+          `;
+        }
+      } catch (e) {
+        document.getElementById('list').innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">😕</div>
+            <div>加载失败，请检查网络连接</div>
+          </div>
+        `;
+      }
+    }
+
+    // 更新标签页数量
+    function updateTabCounts() {
+      const tabs = document.querySelectorAll('.tab');
+      tabs[0].textContent = `关注列表 (${backupData.following.length})`;
+      tabs[1].textContent = `点赞列表 (${backupData.likes.length})`;
+    }
+
+    // 切换标签
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'following') || (i === 1 && tab === 'likes'));
+      });
+      document.getElementById('search').value = '';
+      renderList();
+    }
+
+    // 过滤列表
+    function filterList() {
+      renderList();
+    }
+
+    // 获取有效用户名
+    function getValidUsername(username) {
+      if (!username || username === 'undefined' || username === 'null') {
+        return null;
+      }
+      return username;
+    }
+
+    // 渲染列表
+    function renderList() {
+      const searchText = document.getElementById('search').value.trim().toLowerCase();
+      const list = currentTab === 'following' ? backupData.following : backupData.likes;
+
+      let filtered = list;
+      if (searchText) {
+        filtered = list.filter(item =>
+          (item.username && item.username.toLowerCase().includes(searchText)) ||
+          (item.name && item.name.toLowerCase().includes(searchText))
+        );
+      }
+
+      const countEl = document.getElementById('count');
+      if (searchText) {
+        countEl.textContent = `共 ${list.length} 条，筛选显示 ${filtered.length} 条`;
+      } else {
+        countEl.textContent = `共 ${list.length} 条`;
+      }
+
+      const listEl = document.getElementById('list');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="empty">
+            <div class="empty-icon">${list.length === 0 ? '📭' : '🔍'}</div>
+            <div>${list.length === 0 ? '暂无数据' : '无匹配结果'}</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentTab === 'following') {
+        listEl.innerHTML = filtered.map(user => {
+          const validUsername = getValidUsername(user.username);
+          return `
+            <div class="list-item">
+              <div class="item-info">
+                <div class="item-name">${user.name || '未知'}</div>
+                <div class="item-username">${validUsername ? '@' + validUsername : '用户名未知'}</div>
+              </div>
+              ${validUsername ? `<a class="item-link" href="https://x.com/${validUsername}" target="_blank">查看主页</a>` : ''}
+            </div>
+          `;
+        }).join('');
+      } else {
+        listEl.innerHTML = filtered.map(tweet => {
+          const validUsername = getValidUsername(tweet.username);
+          return `
+            <div class="list-item">
+              <div class="item-info">
+                <div class="item-name">${tweet.name || '未知内容'}</div>
+                <div class="item-username">${validUsername ? '@' + validUsername : '用户名未知'}</div>
+              </div>
+              ${tweet.id && validUsername ? `<a class="item-link" href="https://x.com/${validUsername}/status/${tweet.id}" target="_blank">查看推文</a>` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 初始化
+    loadBackup();
+  </script>
+</body>
+</html>

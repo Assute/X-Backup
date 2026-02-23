@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Backup 管理后台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f8fa;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-right span {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-light {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .btn-light:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .btn-primary {
+      background: #1da1f2;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #0d8bd9;
+    }
+
+    .btn-danger {
+      background: #e0245e;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #c11e52;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    /* 登录页面 */
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1da1f2, #0d8bd9);
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-box h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+
+    .login-box input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    .login-box input:focus {
+      outline: none;
+      border-color: #1da1f2;
+    }
+
+    .login-box .btn {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+    }
+
+    .login-error {
+      color: #e0245e;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    /* 主内容 */
+    .container {
+      padding: 24px;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 24px;
+      font-weight: 700;
+      color: #1da1f2;
+    }
+
+    .stat-card .label {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card-header h3 {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 6px;
+      padding: 0 12px;
+    }
+
+    .search-box input {
+      border: none;
+      background: none;
+      padding: 8px;
+      font-size: 14px;
+      width: 180px;
+      outline: none;
+    }
+
+    .search-box svg {
+      width: 16px;
+      height: 16px;
+      color: #999;
+    }
+
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .sortable:hover {
+      color: #1da1f2;
+    }
+
+    .sortable .sort-arrow {
+      display: inline-block;
+      margin-left: 4px;
+      color: #ccc;
+      font-size: 12px;
+    }
+
+    .sortable.active .sort-arrow {
+      color: #1da1f2;
+    }
+
+    .card-body {
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #f9f9f9;
+      font-weight: 600;
+      color: #666;
+      font-size: 13px;
+    }
+
+    td {
+      font-size: 14px;
+      color: #333;
+    }
+
+    tr:hover {
+      background: #f9f9f9;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-blue {
+      background: #e8f4fd;
+      color: #1da1f2;
+    }
+
+    .badge-green {
+      background: #e6f9ed;
+      color: #17bf63;
+    }
+
+    .link {
+      color: #1da1f2;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .link:hover {
+      text-decoration: underline;
+    }
+
+    .action-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* 弹窗 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #fff;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      padding: 24px;
+    }
+
+    .modal-content h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .modal-content input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 16px;
+    }
+
+    .modal-content input:focus {
+      outline: none;
+      border-color: #1da1f2;
+    }
+
+    .modal-content p {
+      margin-bottom: 20px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    .modal-buttons .btn {
+      padding: 10px 20px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    /* 分页样式 */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border-top: 1px solid #eee;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #333;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: #f5f5f5;
+      border-color: #1da1f2;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination button.active {
+      background: #1da1f2;
+      color: #fff;
+      border-color: #1da1f2;
+    }
+
+    .pagination .page-info {
+      font-size: 13px;
+      color: #666;
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 登录页面 -->
+  <div id="login-page" class="login-container">
+    <div class="login-box">
+      <h2>X Backup 管理后台</h2>
+      <input type="text" id="admin-username" placeholder="管理员账号">
+      <input type="password" id="admin-password" placeholder="密码">
+      <button class="btn btn-primary" onclick="login()">登录</button>
+      <div id="login-error" class="login-error"></div>
+    </div>
+  </div>
+
+  <!-- 主页面 -->
+  <div id="main-page" class="hidden">
+    <div class="header">
+      <h1>X Backup 管理后台</h1>
+      <div class="header-right">
+        <span>管理员</span>
+        <button class="btn btn-light" onclick="showAdminSettingsModal()">修改账号</button>
+        <button class="btn btn-light" onclick="logout()">退出</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="number" id="stat-users">0</div>
+          <div class="label">注册用户</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="stat-accounts">0</div>
+          <div class="label">X账号</div>
+        </div>
+        <div class="stat-card">
+          <div class="number" id="stat-backups">0</div>
+          <div class="label">备份记录</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <h3>用户列表</h3>
+            <div class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input type="text" id="search-input" placeholder="搜索用户名..." oninput="filterUsers()">
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <table>
+            <thead>
+              <tr>
+                <th>用户名</th>
+                <th class="sortable" data-sort="account" onclick="toggleSort('account')">
+                  X账号数量<span class="sort-arrow">↕</span>
+                </th>
+                <th class="sortable" data-sort="task" onclick="toggleSort('task')">
+                  任务数量<span class="sort-arrow">↕</span>
+                </th>
+                <th class="sortable active" data-sort="time" onclick="toggleSort('time')">
+                  注册时间<span class="sort-arrow">↓</span>
+                </th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="users-table">
+              <tr>
+                <td colspan="5" class="loading">加载中...</td>
+              </tr>
+            </tbody>
+          </table>
+          <div id="pagination" class="pagination"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div id="password-modal" class="modal">
+    <div class="modal-content">
+      <h3>修改密码</h3>
+      <input type="password" id="new-password" placeholder="请输入新密码">
+      <div class="modal-buttons">
+        <button class="btn" onclick="closePasswordModal()">取消</button>
+        <button class="btn btn-primary" onclick="submitPassword()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 删除确认弹窗 -->
+  <div id="delete-modal" class="modal">
+    <div class="modal-content">
+      <h3>确认删除</h3>
+      <p>确定要删除用户 <strong id="delete-username"></strong> 吗？此操作将同时删除该用户的所有X账号和备份数据，且不可恢复。</p>
+      <div class="modal-buttons">
+        <button class="btn" onclick="closeDeleteModal()">取消</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">确定删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员账号设置弹窗 -->
+  <div id="admin-settings-modal" class="modal">
+    <div class="modal-content">
+      <h3>修改管理员账号</h3>
+      <input type="text" id="admin-new-username" placeholder="新用户名（不修改留空）">
+      <input type="password" id="admin-new-password" placeholder="新密码（不修改留空）">
+      <div class="modal-buttons">
+        <button class="btn" onclick="closeAdminSettingsModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveAdminSettings()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api/admin';
+    let authToken = null;
+    let allUsers = [];
+    let currentUserId = null;
+    let currentSort = { field: 'time', order: 'desc' };
+    let currentPage = 1;
+    const PAGE_SIZE = 20;
+
+    // 检查登录状态
+    function checkAuth() {
+      const saved = localStorage.getItem('adminAuth');
+      if (saved) {
+        authToken = saved;
+        showMainPage();
+        loadData();
+      }
+    }
+
+    // 登录
+    async function login() {
+      const username = document.getElementById('admin-username').value.trim();
+      const password = document.getElementById('admin-password').value;
+
+      if (!username || !password) {
+        document.getElementById('login-error').textContent = '请输入账号和密码';
+        return;
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          authToken = btoa(username + ':' + password);
+          localStorage.setItem('adminAuth', authToken);
+          showMainPage();
+          loadData();
+        } else {
+          document.getElementById('login-error').textContent = data.error;
+        }
+      } catch (e) {
+        document.getElementById('login-error').textContent = '网络错误';
+      }
+    }
+
+    // 退出
+    function logout() {
+      authToken = null;
+      localStorage.removeItem('adminAuth');
+      document.getElementById('login-page').classList.remove('hidden');
+      document.getElementById('main-page').classList.add('hidden');
+      document.getElementById('admin-username').value = '';
+      document.getElementById('admin-password').value = '';
+    }
+
+    // 显示主页面
+    function showMainPage() {
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('main-page').classList.remove('hidden');
+    }
+
+    // API请求
+    async function api(path, options = {}) {
+      const res = await fetch(API_BASE + path, {
+        headers: {
+          'Authorization': 'Basic ' + authToken,
+          'Content-Type': 'application/json'
+        },
+        ...options
+      });
+      return res.json();
+    }
+
+    // 加载数据
+    async function loadData() {
+      try {
+        // 加载统计
+        const statsRes = await api('/stats');
+        if (statsRes.success) {
+          document.getElementById('stat-users').textContent = statsRes.stats.totalUsers;
+          document.getElementById('stat-accounts').textContent = statsRes.stats.totalAccounts;
+          document.getElementById('stat-backups').textContent = statsRes.stats.totalBackups;
+        }
+
+        // 加载用户列表
+        const usersRes = await api('/users');
+        if (usersRes.success) {
+          allUsers = usersRes.users;
+          sortUsers();
+        }
+      } catch (e) {
+        console.error('加载数据失败:', e);
+      }
+    }
+
+    // 搜索过滤
+    function filterUsers() {
+      currentPage = 1;
+      sortUsers();
+    }
+
+    // 切换排序
+    function toggleSort(field) {
+      if (currentSort.field === field) {
+        currentSort.order = currentSort.order === 'desc' ? 'asc' : 'desc';
+      } else {
+        currentSort.field = field;
+        currentSort.order = 'desc';
+      }
+      updateSortUI();
+      sortUsers();
+    }
+
+    // 更新排序UI
+    function updateSortUI() {
+      document.querySelectorAll('.sortable').forEach(th => {
+        const field = th.dataset.sort;
+        const arrow = th.querySelector('.sort-arrow');
+        if (field === currentSort.field) {
+          th.classList.add('active');
+          arrow.textContent = currentSort.order === 'desc' ? '↓' : '↑';
+        } else {
+          th.classList.remove('active');
+          arrow.textContent = '↕';
+        }
+      });
+    }
+
+    // 排序用户
+    function sortUsers() {
+      const searchText = document.getElementById('search-input').value.trim().toLowerCase();
+
+      // 过滤
+      let filtered = allUsers.filter(u => u.username.toLowerCase().includes(searchText));
+
+      // 排序
+      filtered.sort((a, b) => {
+        let result = 0;
+        if (currentSort.field === 'time') {
+          result = new Date(b.createdAt) - new Date(a.createdAt);
+        } else if (currentSort.field === 'account') {
+          result = b.accountCount - a.accountCount;
+        } else if (currentSort.field === 'task') {
+          result = (b.taskCount || 0) - (a.taskCount || 0);
+        }
+        return currentSort.order === 'desc' ? result : -result;
+      });
+
+      // 分页
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const paged = filtered.slice(start, start + PAGE_SIZE);
+
+      renderUsers(paged);
+      renderPagination(filtered.length, totalPages);
+    }
+
+    // 渲染分页
+    function renderPagination(total, totalPages) {
+      const container = document.getElementById('pagination');
+
+      if (total === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      if (totalPages <= 1) {
+        container.innerHTML = `<span class="page-info">第 1/1 页，共 ${total} 条</span>`;
+        return;
+      }
+
+      let html = `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>首页</button>`;
+      html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+
+      // 页码按钮
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + 4);
+      if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+      }
+
+      html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+      html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末页</button>`;
+      html += `<span class="page-info">第 ${currentPage}/${totalPages} 页，共 ${total} 条</span>`;
+
+      container.innerHTML = html;
+    }
+
+    // 跳转页面
+    function goToPage(page) {
+      currentPage = page;
+      sortUsers();
+    }
+
+    // 渲染用户列表
+    function renderUsers(users) {
+      const tbody = document.getElementById('users-table');
+
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无用户</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = users.map(user => `
+        <tr>
+          <td><a class="link" href="/admin/user?id=${user._id}"><strong>${user.username}</strong></a></td>
+          <td><span class="badge badge-blue">${user.accountCount} 个账号</span></td>
+          <td><span class="badge badge-green">${user.taskCount || 0} 个任务</span></td>
+          <td>${formatDate(user.createdAt)}</td>
+          <td>
+            <div class="action-btns">
+              <button class="btn btn-sm" onclick="location.href='/admin/user?id=${user._id}'">详情</button>
+              <button class="btn btn-sm btn-primary" onclick="showPasswordModal('${user._id}')">修改密码</button>
+              <button class="btn btn-sm btn-danger" onclick="showDeleteModal('${user._id}', '${user.username}')">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 格式化日期
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 显示修改密码弹窗
+    function showPasswordModal(userId) {
+      currentUserId = userId;
+      document.getElementById('password-modal').classList.add('show');
+      document.getElementById('new-password').value = '';
+      document.getElementById('new-password').focus();
+    }
+
+    // 关闭修改密码弹窗
+    function closePasswordModal() {
+      document.getElementById('password-modal').classList.remove('show');
+      currentUserId = null;
+    }
+
+    // 提交密码修改
+    async function submitPassword() {
+      const newPassword = document.getElementById('new-password').value;
+      if (!newPassword || newPassword.length < 3) {
+        alert('密码长度至少3位');
+        return;
+      }
+
+      try {
+        const res = await api('/users/' + currentUserId + '/password', {
+          method: 'PUT',
+          body: JSON.stringify({ newPassword })
+        });
+
+        if (res.success) {
+          alert('密码修改成功');
+          closePasswordModal();
+        } else {
+          alert('修改失败：' + res.error);
+        }
+      } catch (e) {
+        alert('修改失败，请检查网络连接');
+      }
+    }
+
+    // 显示删除确认弹窗
+    function showDeleteModal(userId, username) {
+      currentUserId = userId;
+      document.getElementById('delete-username').textContent = username;
+      document.getElementById('delete-modal').classList.add('show');
+    }
+
+    // 关闭删除确认弹窗
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.remove('show');
+      currentUserId = null;
+    }
+
+    // 确认删除
+    async function confirmDelete() {
+      try {
+        const res = await api('/users/' + currentUserId, {
+          method: 'DELETE'
+        });
+
+        if (res.success) {
+          alert('用户已删除');
+          closeDeleteModal();
+          loadData();
+        } else {
+          alert('删除失败：' + res.error);
+        }
+      } catch (e) {
+        alert('删除失败，请检查网络连接');
+      }
+    }
+
+    // 回车登录
+    document.getElementById('admin-password').addEventListener('keypress', e => {
+      if (e.key === 'Enter') login();
+    });
+
+    // 回车提交密码
+    document.getElementById('new-password').addEventListener('keypress', e => {
+      if (e.key === 'Enter') submitPassword();
+    });
+
+    // 点击弹窗外部关闭
+    document.getElementById('password-modal').addEventListener('click', e => {
+      if (e.target.id === 'password-modal') closePasswordModal();
+    });
+    document.getElementById('delete-modal').addEventListener('click', e => {
+      if (e.target.id === 'delete-modal') closeDeleteModal();
+    });
+    document.getElementById('admin-settings-modal').addEventListener('click', e => {
+      if (e.target.id === 'admin-settings-modal') closeAdminSettingsModal();
+    });
+
+    // 显示管理员账号设置弹窗
+    function showAdminSettingsModal() {
+      document.getElementById('admin-settings-modal').classList.add('show');
+      document.getElementById('admin-new-username').value = '';
+      document.getElementById('admin-new-password').value = '';
+    }
+
+    // 关闭管理员账号设置弹窗
+    function closeAdminSettingsModal() {
+      document.getElementById('admin-settings-modal').classList.remove('show');
+    }
+
+    // 保存管理员账号设置
+    async function saveAdminSettings() {
+      const newUsername = document.getElementById('admin-new-username').value.trim();
+      const newPassword = document.getElementById('admin-new-password').value;
+
+      if (!newUsername && !newPassword) {
+        alert('请输入新用户名或新密码');
+        return;
+      }
+
+      try {
+        const res = await api('/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ newUsername, newPassword })
+        });
+
+        if (res.success) {
+          alert('管理员账号已更新');
+          closeAdminSettingsModal();
+          // 如果修改了用户名或密码，需要重新登录
+          if (newUsername || newPassword) {
+            logout();
+          }
+        } else {
+          alert('修改失败：' + res.error);
+        }
+      } catch (e) {
+        alert('修改失败，请检查网络连接');
+      }
+    }
+
+    // 初始化
+    checkAuth();
+  </script>
+</body>
+</html>
