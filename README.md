@@ -66,10 +66,11 @@ npm start
 
 ### 2. 安装 Chrome 扩展
 
-1. 打开 Chrome 浏览器，进入 `chrome://extensions/`
-2. 开启右上角的「开发者模式」
-3. 点击「加载已解压的扩展程序」
-4. 选择 `extension` 文件夹
+1. 下载 [extension.zip](https://github.com/Assute/X-Backup/releases/latest/download/extension.zip) 并解压
+2. 打开 Chrome 浏览器，进入 `chrome://extensions/`
+3. 开启右上角的「开发者模式」
+4. 点击「加载已解压的扩展程序」
+5. 选择解压后的 `extension` 文件夹
 
 ## 使用说明
 
