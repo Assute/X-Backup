@@ -1,6 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const { users, xAccounts, backups, tasks } = require('../services/db');
 
 const router = express.Router();
@@ -197,7 +198,7 @@ router.get('/users/:id', adminAuth, (req, res) => {
 });
 
 // 修改用户密码
-router.put('/users/:id/password', adminAuth, (req, res) => {
+router.put('/users/:id/password', adminAuth, async (req, res) => {
   try {
     const { newPassword } = req.body;
 
@@ -210,7 +211,9 @@ router.put('/users/:id/password', adminAuth, (req, res) => {
       return res.status(404).json({ success: false, error: '用户不存在' });
     }
 
-    users.update(req.params.id, { password: newPassword });
+    // 使用bcrypt加密密码
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    users.update(req.params.id, { password: hashedPassword });
 
     res.json({ success: true, message: '密码修改成功' });
   } catch (err) {

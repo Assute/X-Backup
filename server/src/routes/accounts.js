@@ -163,6 +163,12 @@ router.post('/:id/sync', async (req, res) => {
       return res.status(404).json({ success: false, error: '账号不存在' });
     }
 
+    // 获取现有备份数据
+    const existingFollowing = backups.findOne({ xAccountId: account._id, type: 'following' });
+    const existingLikes = backups.findOne({ xAccountId: account._id, type: 'likes' });
+    const oldFollowingCount = existingFollowing?.data?.length || 0;
+    const oldLikesCount = existingLikes?.data?.length || 0;
+
     // 先返回响应，后台执行同步
     res.json({ success: true, message: '同步已开始' });
 
@@ -172,40 +178,49 @@ router.post('/:id/sync', async (req, res) => {
     // 获取点赞列表
     const likes = await xapi.getAllLikes(account.cookie, account.xUserId);
 
-    // 保存关注备份
-    const existingFollowing = backups.findOne({ xAccountId: account._id, type: 'following' });
-    if (existingFollowing) {
-      backups.update(existingFollowing._id, { data: following, createdAt: new Date().toISOString() });
+    // 数据保护：如果新数据为空但旧数据不为空，或新数据量小于旧数据的30%，跳过更新
+    const shouldUpdateFollowing = !oldFollowingCount || following.length > 0 && following.length >= oldFollowingCount * 0.3;
+    const shouldUpdateLikes = !oldLikesCount || likes.length > 0 && likes.length >= oldLikesCount * 0.3;
+
+    // 保存关注备份（带保护）
+    if (shouldUpdateFollowing) {
+      if (existingFollowing) {
+        backups.update(existingFollowing._id, { data: following, createdAt: new Date().toISOString() });
+      } else {
+        backups.create({
+          _id: uuidv4(),
+          xAccountId: account._id,
+          type: 'following',
+          data: following,
+          createdAt: new Date().toISOString()
+        });
+      }
     } else {
-      backups.create({
-        _id: uuidv4(),
-        xAccountId: account._id,
-        type: 'following',
-        data: following,
-        createdAt: new Date().toISOString()
-      });
+      console.log(`[保护] 关注数据异常，跳过更新。旧数据: ${oldFollowingCount}, 新数据: ${following.length}`);
     }
 
-    // 保存点赞备份
-    const existingLikes = backups.findOne({ xAccountId: account._id, type: 'likes' });
-    if (existingLikes) {
-      backups.update(existingLikes._id, { data: likes, createdAt: new Date().toISOString() });
+    // 保存点赞备份（带保护）
+    if (shouldUpdateLikes) {
+      if (existingLikes) {
+        backups.update(existingLikes._id, { data: likes, createdAt: new Date().toISOString() });
+      } else {
+        backups.create({
+          _id: uuidv4(),
+          xAccountId: account._id,
+          type: 'likes',
+          data: likes,
+          createdAt: new Date().toISOString()
+        });
+      }
     } else {
-      backups.create({
-        _id: uuidv4(),
-        xAccountId: account._id,
-        type: 'likes',
-        data: likes,
-        createdAt: new Date().toISOString()
-      });
+      console.log(`[保护] 点赞数据异常，跳过更新。旧数据: ${oldLikesCount}, 新数据: ${likes.length}`);
     }
 
-    // 更新账号统计
-    xAccounts.update(account._id, {
-      followingCount: following.length,
-      likesCount: likes.length,
-      lastSyncAt: new Date().toISOString()
-    });
+    // 更新账号统计（只更新成功同步的数据）
+    const updateData = { lastSyncAt: new Date().toISOString() };
+    if (shouldUpdateFollowing) updateData.followingCount = following.length;
+    if (shouldUpdateLikes) updateData.likesCount = likes.length;
+    xAccounts.update(account._id, updateData);
 
   } catch (err) {
     console.error('同步账号错误:', err);
@@ -250,42 +265,76 @@ router.post('/:id/sync-data', (req, res) => {
 
     const { following, likes } = req.body;
 
-    // 保存关注备份
+    // 获取现有备份数据
     const existingFollowing = backups.findOne({ xAccountId: account._id, type: 'following' });
-    if (existingFollowing) {
-      backups.update(existingFollowing._id, { data: following || [], createdAt: new Date().toISOString() });
-    } else {
-      backups.create({
-        _id: uuidv4(),
-        xAccountId: account._id,
-        type: 'following',
-        data: following || [],
-        createdAt: new Date().toISOString()
-      });
-    }
-
-    // 保存点赞备份
     const existingLikes = backups.findOne({ xAccountId: account._id, type: 'likes' });
-    if (existingLikes) {
-      backups.update(existingLikes._id, { data: likes || [], createdAt: new Date().toISOString() });
+    const oldFollowingCount = existingFollowing?.data?.length || 0;
+    const oldLikesCount = existingLikes?.data?.length || 0;
+
+    const newFollowingCount = following?.length || 0;
+    const newLikesCount = likes?.length || 0;
+
+    // 数据保护：如果新数据为空但旧数据不为空，或新数据量小于旧数据的30%，跳过更新
+    const shouldUpdateFollowing = !oldFollowingCount || newFollowingCount > 0 && newFollowingCount >= oldFollowingCount * 0.3;
+    const shouldUpdateLikes = !oldLikesCount || newLikesCount > 0 && newLikesCount >= oldLikesCount * 0.3;
+
+    let skippedFollowing = false;
+    let skippedLikes = false;
+
+    // 保存关注备份（带保护）
+    if (shouldUpdateFollowing) {
+      if (existingFollowing) {
+        backups.update(existingFollowing._id, { data: following || [], createdAt: new Date().toISOString() });
+      } else {
+        backups.create({
+          _id: uuidv4(),
+          xAccountId: account._id,
+          type: 'following',
+          data: following || [],
+          createdAt: new Date().toISOString()
+        });
+      }
     } else {
-      backups.create({
-        _id: uuidv4(),
-        xAccountId: account._id,
-        type: 'likes',
-        data: likes || [],
-        createdAt: new Date().toISOString()
-      });
+      skippedFollowing = true;
+      console.log(`[保护] 关注数据异常，跳过更新。旧数据: ${oldFollowingCount}, 新数据: ${newFollowingCount}`);
     }
 
-    // 更新账号统计
-    xAccounts.update(account._id, {
-      followingCount: following?.length || 0,
-      likesCount: likes?.length || 0,
-      lastSyncAt: new Date().toISOString()
-    });
+    // 保存点赞备份（带保护）
+    if (shouldUpdateLikes) {
+      if (existingLikes) {
+        backups.update(existingLikes._id, { data: likes || [], createdAt: new Date().toISOString() });
+      } else {
+        backups.create({
+          _id: uuidv4(),
+          xAccountId: account._id,
+          type: 'likes',
+          data: likes || [],
+          createdAt: new Date().toISOString()
+        });
+      }
+    } else {
+      skippedLikes = true;
+      console.log(`[保护] 点赞数据异常，跳过更新。旧数据: ${oldLikesCount}, 新数据: ${newLikesCount}`);
+    }
 
-    res.json({ success: true, message: '同步数据已保存' });
+    // 更新账号统计（只更新成功同步的数据）
+    const updateData = { lastSyncAt: new Date().toISOString() };
+    if (shouldUpdateFollowing) updateData.followingCount = newFollowingCount;
+    if (shouldUpdateLikes) updateData.likesCount = newLikesCount;
+    xAccounts.update(account._id, updateData);
+
+    // 返回结果
+    if (skippedFollowing || skippedLikes) {
+      const skipped = [];
+      if (skippedFollowing) skipped.push('关注');
+      if (skippedLikes) skipped.push('点赞');
+      res.json({
+        success: true,
+        message: `同步完成，但${skipped.join('和')}数据因数量异常已跳过（防止误覆盖）`
+      });
+    } else {
+      res.json({ success: true, message: '同步数据已保存' });
+    }
   } catch (err) {
     console.error('保存同步数据错误:', err);
     res.status(500).json({ success: false, error: '服务器错误' });
