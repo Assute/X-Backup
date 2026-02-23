@@ -48,6 +48,30 @@ h1 {
   color: #fff !important;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.header-icon-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
 .header-user .btn {
   background: rgba(255,255,255,0.2);
   color: #fff;
@@ -122,8 +146,63 @@ h1 {
   margin-top: 12px;
 }
 
+/* URL配置界面 */
+#url-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: 20px 30px;
+}
+
+.url-setup {
+  width: 100%;
+  max-width: 280px;
+  text-align: center;
+}
+
+.url-setup-icon {
+  margin-bottom: 16px;
+}
+
+.url-setup h2 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.url-setup-desc {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.url-setup input {
+  padding: 12px 14px;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.url-setup .btn {
+  padding: 12px 16px;
+  font-size: 15px;
+}
+
+#url-error-msg {
+  margin-top: 12px;
+}
+
 .hidden {
   display: none !important;
+}
+
+/* 输入标签 */
+.input-label {
+  display: block;
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 6px;
 }
 
 /* 表单 */
@@ -537,11 +616,27 @@ input:focus, select:focus {
 
 /* 小弹窗 */
 .modal-small {
-  width: 280px;
+  width: 300px;
 }
 
 .modal-small .modal-body p {
   text-align: center;
   color: #333;
   font-size: 14px;
+}
+
+/* 服务器URL输入行 */
+.server-url-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.server-url-row input {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.server-url-row .btn {
+  white-space: nowrap;
 }

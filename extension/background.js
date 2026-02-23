@@ -1,13 +1,27 @@
 // Background service worker
 
-const API_BASE = 'http://localhost:5500/api';
+// 动态获取服务器URL
+async function getApiBase() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['serverUrl'], (result) => {
+      const serverUrl = result.serverUrl || '';
+      resolve(serverUrl ? serverUrl + '/api' : '');
+    });
+  });
+}
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('[X Backup] 插件已安装');
 });
 
-// 监听来自popup和content script的消息
+// 监听来自popup的服务器URL更新
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'UPDATE_SERVER_URL') {
+    chrome.storage.local.set({ serverUrl: message.url });
+    sendResponse({ received: true });
+    return false;
+  }
+
   if (message.type === 'GET_COOKIES') {
     getCookies().then(sendResponse);
     return true;
@@ -84,7 +98,8 @@ async function getAuthInfo() {
 async function handleSyncFollow(action, user) {
   try {
     const { token, currentXAccountId } = await getAuthInfo();
-    if (!token || !currentXAccountId) return;
+    const API_BASE = await getApiBase();
+    if (!token || !currentXAccountId || !API_BASE) return;
 
     const response = await fetch(`${API_BASE}/sync/following`, {
       method: 'POST',
@@ -108,7 +123,8 @@ async function handleSyncFollow(action, user) {
 async function handleSyncLike(action, tweet) {
   try {
     const { token, currentXAccountId } = await getAuthInfo();
-    if (!token || !currentXAccountId) return;
+    const API_BASE = await getApiBase();
+    if (!token || !currentXAccountId || !API_BASE) return;
 
     const response = await fetch(`${API_BASE}/sync/likes`, {
       method: 'POST',

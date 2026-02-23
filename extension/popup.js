@@ -1,5 +1,5 @@
 // 配置
-const API_BASE = 'http://localhost:5500/api';
+let API_BASE = '';
 
 // X API 配置
 const X_BEARER_TOKEN = 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA';
@@ -11,6 +11,22 @@ let accounts = [];
 
 // DOM 元素
 const $ = id => document.getElementById(id);
+
+// 获取保存的服务器URL
+function getServerUrl() {
+  return localStorage.getItem('serverUrl') || '';
+}
+
+// 保存服务器URL
+function saveServerUrl(url) {
+  // 去掉末尾的斜杠
+  url = url.replace(/\/+$/, '');
+  localStorage.setItem('serverUrl', url);
+  // 同步到 chrome.storage.local 供 background.js 使用
+  chrome.storage.local.set({ serverUrl: url });
+  API_BASE = url + '/api';
+  return url;
+}
 
 // 从cookie字符串解析 ct0 (csrf token)
 function parseCt0FromCookie(cookieStr) {
@@ -310,14 +326,31 @@ async function fetchAllLikes(cookieStr, userId, onProgress, maxPages = 50) {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', async () => {
-  // 从存储加载token
-  const stored = await chrome.storage.local.get(['token', 'user']);
-  if (stored.token && stored.user) {
-    token = stored.token;
-    currentUser = stored.user;
-    showMainSection();
-    loadAccounts();
-    loadTasks();
+  // 加载服务器URL
+  const savedUrl = getServerUrl();
+
+  if (savedUrl) {
+    $('server-url').value = savedUrl;
+    $('modal-server-url').value = savedUrl;
+    API_BASE = savedUrl + '/api';
+
+    // 已配置URL，显示登录界面
+    $('url-section').classList.add('hidden');
+    $('auth-section').classList.remove('hidden');
+
+    // 从存储加载token
+    const stored = await chrome.storage.local.get(['token', 'user']);
+    if (stored.token && stored.user) {
+      token = stored.token;
+      currentUser = stored.user;
+      showMainSection();
+      loadAccounts();
+      loadTasks();
+    }
+  } else {
+    // 未配置URL，显示URL配置界面
+    $('url-section').classList.remove('hidden');
+    $('auth-section').classList.add('hidden');
   }
 
   bindEvents();
@@ -325,6 +358,69 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // 绑定事件
 function bindEvents() {
+  // 服务器URL保存（首次配置）
+  $('save-url-btn').onclick = async () => {
+    const url = $('server-url').value.trim();
+    if (!url) {
+      $('url-error-msg').textContent = '请输入服务器地址';
+      return;
+    }
+    $('url-error-msg').textContent = '';
+
+    // 尝试连接服务器
+    showLoading();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      saveServerUrl(url);
+      $('modal-server-url').value = url;
+      showToast('服务器连接成功');
+
+      // 切换到登录界面
+      $('url-section').classList.add('hidden');
+      $('auth-section').classList.remove('hidden');
+      checkServerStatus();
+    } catch (e) {
+      $('url-error-msg').textContent = '无法连接到服务器，请检查地址是否正确';
+    }
+    hideLoading();
+  };
+
+  // 头部设置按钮
+  $('header-settings-btn').onclick = () => {
+    $('modal-server-url').value = getServerUrl();
+    $('url-modal').classList.remove('hidden');
+  };
+
+  // 弹窗中保存URL
+  $('modal-save-url-btn').onclick = async () => {
+    const url = $('modal-server-url').value.trim();
+    if (!url) {
+      showToast('请输入服务器地址');
+      return;
+    }
+
+    showLoading();
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      saveServerUrl(url);
+      $('server-url').value = url;
+      $('url-modal').classList.add('hidden');
+      showToast('服务器地址已保存');
+      checkServerStatus();
+    } catch (e) {
+      showToast('无法连接到服务器');
+    }
+    hideLoading();
+  };
+
   // 登录注册
   $('login-btn').onclick = login;
   $('register-btn').onclick = register;
@@ -345,6 +441,10 @@ function bindEvents() {
   // 设置
   $('settings-btn').onclick = showSettingsModal;
   $('save-settings-btn').onclick = saveSettings;
+
+  // 账号管理
+  $('account-settings-btn').onclick = showAccountSettingsModal;
+  $('save-account-btn').onclick = saveAccountSettings;
 
   // 关闭弹窗
   document.querySelectorAll('.close-btn').forEach(btn => {
@@ -375,6 +475,13 @@ function bindEvents() {
 async function checkServerStatus() {
   const statusDot = document.querySelector('.status-dot');
   const statusText = document.querySelector('.status-text');
+
+  if (!API_BASE) {
+    statusDot.classList.remove('online');
+    statusDot.classList.add('offline');
+    statusText.textContent = '未配置';
+    return;
+  }
 
   try {
     const controller = new AbortController();
@@ -446,30 +553,28 @@ function hideConfirm() {
 
 // 切换到主界面
 function showMainSection() {
+  $('url-section').classList.add('hidden');
   $('auth-section').classList.add('hidden');
   $('main-section').classList.remove('hidden');
   $('header-user').classList.remove('hidden');
+  $('header-settings-btn').classList.add('hidden');
   $('current-user').textContent = currentUser.username;
 }
 
 // 登录
 async function login() {
-  console.log('登录函数被调用');
   const username = $('username').value.trim();
   const password = $('password').value;
-  console.log('用户名:', username, '密码长度:', password.length);
 
   if (!username || !password) {
     return showError('请输入用户名和密码');
   }
 
   showLoading();
-  console.log('正在发送登录请求...');
   const res = await api('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ username, password })
   });
-  console.log('登录响应:', res);
   hideLoading();
 
   if (res.success) {
@@ -523,6 +628,7 @@ async function logout() {
   await chrome.storage.local.remove(['token', 'user', 'currentXAccountId']);
   $('main-section').classList.add('hidden');
   $('header-user').classList.add('hidden');
+  $('header-settings-btn').classList.remove('hidden');
   $('auth-section').classList.remove('hidden');
   $('username').value = '';
   $('password').value = '';
@@ -1117,4 +1223,40 @@ function saveSettings() {
   localStorage.setItem('taskSettings', JSON.stringify(settings));
   $('settings-modal').classList.add('hidden');
   showToast('设置已保存');
+}
+
+// 显示账号管理弹窗
+function showAccountSettingsModal() {
+  $('new-username').value = '';
+  $('new-password').value = '';
+  $('account-settings-modal').classList.remove('hidden');
+}
+
+// 保存账号设置
+async function saveAccountSettings() {
+  const newUsername = $('new-username').value.trim();
+  const newPassword = $('new-password').value;
+
+  if (!newUsername && !newPassword) {
+    return showToast('请输入新用户名或新密码');
+  }
+
+  showLoading();
+  const res = await api('/auth/update', {
+    method: 'POST',
+    body: JSON.stringify({ newUsername, newPassword })
+  });
+  hideLoading();
+
+  if (res.success) {
+    // 更新本地存储
+    token = res.token;
+    currentUser = res.user;
+    await chrome.storage.local.set({ token, user: currentUser });
+    $('current-user').textContent = currentUser.username;
+    $('account-settings-modal').classList.add('hidden');
+    showToast('账号信息已更新');
+  } else {
+    showToast(res.error || '修改失败');
+  }
 }

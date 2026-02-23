@@ -1,11 +1,43 @@
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const { users, xAccounts, backups, tasks } = require('../services/db');
 
 const router = express.Router();
 
-// 管理员账号
-const ADMIN_USER = 'admin';
-const ADMIN_PASS = 'admin';
+// 管理员配置文件路径
+const ADMIN_CONFIG_PATH = path.join(__dirname, '../../data/admin.json');
+
+// 默认管理员账号
+const DEFAULT_ADMIN = { username: 'admin', password: 'admin' };
+
+// 获取管理员配置
+function getAdminConfig() {
+  try {
+    if (fs.existsSync(ADMIN_CONFIG_PATH)) {
+      const data = fs.readFileSync(ADMIN_CONFIG_PATH, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error('读取管理员配置失败:', e);
+  }
+  return DEFAULT_ADMIN;
+}
+
+// 保存管理员配置
+function saveAdminConfig(config) {
+  try {
+    const dir = path.dirname(ADMIN_CONFIG_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(ADMIN_CONFIG_PATH, JSON.stringify(config, null, 2));
+    return true;
+  } catch (e) {
+    console.error('保存管理员配置失败:', e);
+    return false;
+  }
+}
 
 // 简单的管理员认证中间件
 function adminAuth(req, res, next) {
@@ -18,7 +50,8 @@ function adminAuth(req, res, next) {
   const decoded = Buffer.from(base64, 'base64').toString();
   const [username, password] = decoded.split(':');
 
-  if (username !== ADMIN_USER || password !== ADMIN_PASS) {
+  const adminConfig = getAdminConfig();
+  if (username !== adminConfig.username || password !== adminConfig.password) {
     return res.status(401).json({ success: false, error: '管理员账号或密码错误' });
   }
 
@@ -28,11 +61,48 @@ function adminAuth(req, res, next) {
 // 管理员登录验证
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
+  const adminConfig = getAdminConfig();
 
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
+  if (username === adminConfig.username && password === adminConfig.password) {
     res.json({ success: true, message: '登录成功' });
   } else {
     res.status(401).json({ success: false, error: '账号或密码错误' });
+  }
+});
+
+// 修改管理员账号设置
+router.put('/settings', adminAuth, (req, res) => {
+  try {
+    const { newUsername, newPassword } = req.body;
+
+    if (!newUsername && !newPassword) {
+      return res.status(400).json({ success: false, error: '请输入新用户名或新密码' });
+    }
+
+    const adminConfig = getAdminConfig();
+
+    if (newUsername) {
+      if (newUsername.length < 3 || newUsername.length > 20) {
+        return res.status(400).json({ success: false, error: '用户名长度需要3-20个字符' });
+      }
+      adminConfig.username = newUsername;
+    }
+
+    if (newPassword) {
+      if (newPassword.length < 3) {
+        return res.status(400).json({ success: false, error: '密码长度至少3个字符' });
+      }
+      adminConfig.password = newPassword;
+    }
+
+    if (saveAdminConfig(adminConfig)) {
+      res.json({ success: true, message: '管理员账号已更新' });
+    } else {
+      res.status(500).json({ success: false, error: '保存配置失败' });
+    }
+  } catch (err) {
+    console.error('修改管理员账号错误:', err);
+    res.status(500).json({ success: false, error: '服务器错误' });
   }
 });
 
