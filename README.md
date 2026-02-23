@@ -60,6 +60,10 @@ npm start
 
 服务默认运行在 `http://localhost:5500`
 
+管理后台地址：`http://localhost:5500/admin`
+- 默认账号：`admin`
+- 默认密码：`admin`
+
 ### 2. 安装 Chrome 扩展
 
 1. 打开 Chrome 浏览器，进入 `chrome://extensions/`
