@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Backup</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-title">
+        <h1>X Backup</h1>
+        <div id="server-status" class="server-status">
+          <span class="status-dot offline"></span>
+          <span class="status-text">离线</span>
+        </div>
+      </div>
+      <div id="header-user" class="header-user hidden">
+        <span id="current-user"></span>
+        <button id="logout-btn" class="btn small">退出</button>
+      </div>
+    </header>
+
+    <!-- 登录界面 -->
+    <div id="auth-section" class="section">
+      <div id="login-form">
+        <input type="text" id="username" placeholder="用户名">
+        <input type="password" id="password" placeholder="密码">
+        <div class="btn-row">
+          <button id="login-btn" class="btn primary">登录</button>
+          <button id="register-btn" class="btn">注册</button>
+        </div>
+      </div>
+      <div id="error-msg" class="error"></div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="main-section" class="section hidden">
+      <!-- 标签页 -->
+      <div class="tabs">
+        <button class="tab active" data-tab="accounts">账号</button>
+        <button class="tab" data-tab="tasks">任务</button>
+      </div>
+
+      <!-- 账号列表 -->
+      <div id="accounts-tab" class="tab-content active">
+        <button id="capture-btn" class="btn primary full-width">
+          获取当前X账号
+        </button>
+        <div id="accounts-list" class="list"></div>
+      </div>
+
+      <!-- 任务列表 -->
+      <div id="tasks-tab" class="tab-content">
+        <div class="btn-row">
+          <button id="create-task-btn" class="btn primary" style="flex:1">创建转移任务</button>
+          <button id="settings-btn" class="btn">设置</button>
+        </div>
+        <div id="tasks-list" class="list"></div>
+      </div>
+    </div>
+
+    <!-- 账号详情弹窗 -->
+    <div id="account-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">账号详情</h3>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <!-- 创建任务弹窗 -->
+    <div id="task-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>创建转移任务</h3>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>源账号（转出）</label>
+          <select id="source-account"></select>
+          <label>目标账号（转入）</label>
+          <select id="target-account"></select>
+          <button id="confirm-task-btn" class="btn primary full-width">确认创建</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务详情弹窗 -->
+    <div id="task-detail-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>任务详情</h3>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div id="task-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div id="confirm-modal" class="modal hidden">
+      <div class="modal-content modal-small">
+        <div class="modal-header">
+          <h3>确认删除</h3>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p id="confirm-message">确定要删除吗？</p>
+          <div class="btn-row" style="margin-top: 16px;">
+            <button id="confirm-cancel-btn" class="btn" style="flex:1">取消</button>
+            <button id="confirm-ok-btn" class="btn danger" style="flex:1">确定</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设置弹窗 -->
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>任务限制设置</h3>
+          <button class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <label>执行间隔（分钟）</label>
+          <input type="number" id="setting-interval" min="1" value="5">
+
+          <div class="setting-row">
+            <div class="setting-item">
+              <label>每小时关注上限</label>
+              <input type="number" id="setting-follow-per-hour" min="1" value="5">
+            </div>
+            <div class="setting-item">
+              <label>每小时点赞上限</label>
+              <input type="number" id="setting-like-per-hour" min="1" value="10">
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-item">
+              <label>每天关注上限</label>
+              <input type="number" id="setting-follow-per-day" min="1" value="20">
+            </div>
+            <div class="setting-item">
+              <label>每天点赞上限</label>
+              <input type="number" id="setting-like-per-day" min="1" value="30">
+            </div>
+          </div>
+
+          <button id="save-settings-btn" class="btn primary full-width">保存设置</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="loading" class="loading hidden">
+      <div class="spinner"></div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
