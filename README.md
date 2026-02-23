@@ -37,8 +37,23 @@ x关注/
 
 ### 1. 启动后端服务
 
+**快速下载：**
+
 ```bash
-cd server
+wget https://github.com/Assute/X-Backup/releases/latest/download/server.zip && unzip server.zip && cd server && npm install && npm start
+```
+
+**或使用 curl：**
+
+```bash
+curl -L -o server.zip https://github.com/Assute/X-Backup/releases/latest/download/server.zip && unzip server.zip && cd server && npm install && npm start
+```
+
+**或使用 Git 克隆：**
+
+```bash
+git clone https://github.com/Assute/X-Backup.git
+cd X-Backup/server
 npm install
 npm start
 ```
@@ -53,6 +68,14 @@ npm start
 4. 选择 `extension` 文件夹
 
 ## 使用说明
+
+### 配置服务器
+
+1. 点击扩展图标打开面板
+2. 首次使用会显示服务器配置页面
+3. 输入后端服务器地址（如 `http://localhost:5500`）
+4. 点击「连接服务器」，连接成功后进入登录页面
+5. 登录后如需修改服务器地址，点击右上角齿轮图标
 
 ### 添加账号
 
